@@ -322,9 +322,9 @@ def train(dataset="shakespeare_char", out_dir="run_0", seed_offset=0):
     batch_size = 64 if dataset == "shakespeare_char" else 32
     block_size = 256  # context of up to 256 previous characters
     # I/O
-    eval_interval = 250 if dataset == "shakespeare_char" else 1000
+    eval_interval = 5 if dataset == "shakespeare_char" else 1000
     log_interval = 10 if dataset == "shakespeare_char" else 100
-    eval_iters = 200
+    eval_iters = 10
     eval_only = False  # if True, script exits right after the first eval
     always_save_checkpoint = False  # we expect to overfit on this small dataset, so only save when val improves
     never_save_checkpoint = True  # never save checkpoints
@@ -336,7 +336,7 @@ def train(dataset="shakespeare_char", out_dir="run_0", seed_offset=0):
     bias = False  # do we use bias inside LayerNorm and Linear layers?
     # adamw optimizer
     learning_rate = 1e-3 if dataset == "shakespeare_char" else 5e-4
-    max_iters = 5000 if dataset == "shakespeare_char" else 100000
+    max_iters = 10 if dataset == "shakespeare_char" else 100000
     weight_decay = 1e-1
     beta1 = 0.9
     beta2 = 0.99  # make a bit bigger because number of tokens per iter is small
@@ -349,13 +349,13 @@ def train(dataset="shakespeare_char", out_dir="run_0", seed_offset=0):
     # DDP settings
     backend = "nccl"  # 'nccl', 'gloo', etc.
     # system
-    device = "cuda"  # Always use CUDA
+    device = "cpu"  # Always use CUDA
     dtype = (
         "bfloat16"
         if torch.cuda.is_available() and torch.cuda.is_bf16_supported()
         else "float16"
     )  # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
-    compile = True  # do not torch compile the model on macbooks
+    compile = False  # do not torch compile the model on macbooks
 
     # various inits, derived attributes, I/O setup
     # if not ddp, we are running on a single gpu, and one process
@@ -684,7 +684,7 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
     num_seeds = {
-        "shakespeare_char": 3,
+        "shakespeare_char": 1,
         "enwik8": 1,
         "text8": 1,
     }
@@ -692,7 +692,7 @@ if __name__ == "__main__":
     out_dir = args.out_dir
     all_results = {}
     final_infos = {}
-    for dataset in ["shakespeare_char", "enwik8", "text8"]:
+    for dataset in ["shakespeare_char"]:
         final_info_list = []
         for seed_offset in range(num_seeds[dataset]):
             final_info, train_info, val_info = train(dataset, out_dir, seed_offset)
